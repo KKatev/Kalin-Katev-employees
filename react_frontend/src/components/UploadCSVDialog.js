@@ -14,11 +14,8 @@ import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormLabel from '@material-ui/core/FormLabel';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import ListSubheader from '@material-ui/core/ListSubheader';
-import Select from '@material-ui/core/Select';
-import FormControl from '@material-ui/core/FormControl';
+import Snackbar from '@material-ui/core/Snackbar';
+import MuiAlert from '@material-ui/lab/Alert';
 
 const url = "/employees/uploadProjectPeriods"
 
@@ -29,12 +26,18 @@ const useStyles = makeStyles(theme => ({
 	},
 }));
 
+function Alert(props) {
+    return <MuiAlert elevation={6} variant="filled" {...props} />;
+}
+
 export default function UploadCSVDialog( {handleResponseFunc, setOpenFunc, open} ) {
 	const [dataFile, setDataFile] = useState();
 	const [fileName, setFileName] = useState("Select Data");
 	const [separator, setSeparator] = useState(',');
-	const [dateFormat, setDateFormat] = useState("yyyy-MM-dd")
-	
+    const [dateFormat, setDateFormat] = useState("yyyy-MM-dd")
+    const [alertMessage, setAlertMessage] = useState("");
+    
+    
 	const classes = useStyles();
 	
     const handleClose = () => {
@@ -42,6 +45,13 @@ export default function UploadCSVDialog( {handleResponseFunc, setOpenFunc, open}
 	    setOpenFunc(false);
     };
     
+    const handleAlertClose = (event, reason) => {
+        if (reason === 'clickaway') {
+          return;
+        }
+    
+        setAlertMessage("");
+      };
 
     const handleSeparatorChange = (event) => {
         setSeparator(event.target.value);
@@ -74,9 +84,20 @@ export default function UploadCSVDialog( {handleResponseFunc, setOpenFunc, open}
         };
         
         fetch(url, requestOptions)
-	        .then(response => response.json())
+	        .then( response => {
+                if (response.ok) {
+                    return response.json()
+                } else {
+                    response.text().then(text => setAlertMessage(response.status + ': ' + response.statusText + ", " + text))
+                    
+                    throw new Error(response.status + ': ' + response.statusText);
+                }
+            })
 	        .then(data => handleResponseFunc(data))
-	        .then(handleClose);
+            .then(handleClose)
+            .catch((error) => {
+                console.log(error)
+              });
     }	
     
     const submitDisabled = () => {
@@ -162,6 +183,11 @@ export default function UploadCSVDialog( {handleResponseFunc, setOpenFunc, open}
                     </Button>
                 </DialogActions>
             </Dialog>
+            <Snackbar open={alertMessage !== ""} autoHideDuration={5000} onClose={handleAlertClose}>
+                <Alert onClose={handleAlertClose} severity="error">
+                    {alertMessage}
+                </Alert>
+            </Snackbar>
         </div>
 		
 	)

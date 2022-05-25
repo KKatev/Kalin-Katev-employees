@@ -13,8 +13,13 @@ function App() {
 	const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
 	
 	const applyData = responseData => {
-		setRows(responseData.list)
-		setSummary("".concat(responseData.firstEmployee, ", ", responseData.secondEmployee, ", ", responseData.workdays))
+		if(responseData.firstEmployee != -1 &&  responseData.secondEmployee != -1 && responseData.workdays != -1) {
+			setRows(responseData.list)
+			setSummary("".concat(responseData.firstEmployee, ", ", responseData.secondEmployee, ", ", responseData.workdays))
+		} else {
+			setRows([])
+			setSummary("no valid employee pairs were found")
+		}
 	}
 	
 	return (

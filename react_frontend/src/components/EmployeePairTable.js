@@ -20,12 +20,7 @@ const styles = makeStyles(theme => ({
 
 
 export default function EmployeePairsTable( {rows} ) {
-	const rowstest = [
-	{ firstEmployee: 'Snow', secondEmployee: 'Jon', projectID: 35, daysWorked: 20 },
-	{ firstEmployee: 'Snow', secondEmployee: 'Jon', projectID: 25, daysWorked: 12 },
 	
-]
-
 	const columns = [
 	  {
 	    field: 'firstEmployee',
@@ -67,7 +62,7 @@ export default function EmployeePairsTable( {rows} ) {
 				autoHeight 
 		        rows={rows}
 		        columns={columns}
-		        pageSize={10}
+		        pageSize={5}
 		        getRowId={(row) => row.firstEmployee + "-" + row.secondEmployee + "-" + row.projectID} //each E1-E2-Project triplet must be unique
 		      />
 			</div>
