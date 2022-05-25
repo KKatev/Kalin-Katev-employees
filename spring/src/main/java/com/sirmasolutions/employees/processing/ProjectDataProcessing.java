@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.sirmasolutions.employees.csv.EmployeePairSummary;
 import com.sirmasolutions.employees.domain.CommonProjectsData;
@@ -13,7 +14,7 @@ import com.sirmasolutions.employees.domain.EmployeePair;
 import com.sirmasolutions.employees.domain.ProjectAssignmentData;
 
 public class ProjectDataProcessing {
-	
+
 	public static Map<EmployeePair, Map<Integer, Long>> computePairwiseCommonProjectWorkdays(List<ProjectAssignmentData> data) {
 		
 		Map<EmployeePair, Map<Integer, Long>> globalWorkdaysPerPair = new HashMap<EmployeePair, Map<Integer, Long>>();
@@ -25,12 +26,11 @@ public class ProjectDataProcessing {
 			
 			for (var pair : pairWorkdaysForProject.keySet()) {
 				var projectsToWorkdays = globalWorkdaysPerPair.computeIfAbsent(pair, key -> new HashMap<Integer, Long>());
-				var currentProjectWorkdays = projectsToWorkdays.computeIfAbsent(projectID, key -> (long) 0);
-				projectsToWorkdays.put(projectID, currentProjectWorkdays + pairWorkdaysForProject.get(pair));
+				projectsToWorkdays.merge(projectID, pairWorkdaysForProject.get(pair), (acc, newValue) -> acc + newValue ); 
 			}
 			
 		}
-		
+
 		return globalWorkdaysPerPair;
 	}
 
@@ -54,13 +54,8 @@ public class ProjectDataProcessing {
 		for (int i = 0; i < indexedList.size() - 1; i++) {
 			EmployeeAssignmentPeriod outer = indexedList.get(i);
 			
-			System.out.println("Outer: " + outer);
-			 
-			
 			for (int j = i + 1; j < indexedList.size(); j++) {
-				EmployeeAssignmentPeriod inner = indexedList.get(j);
-				System.out.println("Inner: " + inner);
-				 
+				EmployeeAssignmentPeriod inner = indexedList.get(j);	 
 				
 				if(outer.getEmployeeID() != inner.getEmployeeID()) { //assuming one employee may have two or more assignment periods on the same project
 					EmployeePair pair = new EmployeePair(outer.getEmployeeID(), inner.getEmployeeID());
@@ -76,16 +71,14 @@ public class ProjectDataProcessing {
 		return pairMap;
 	}
 	
-	public static EmployeePairSummary findBestPair( Map<EmployeePair, Map<Integer, Long>> pairToWorkdays) {
+	public static Optional<EmployeePairSummary> findBestPair( Map<EmployeePair, Map<Integer, Long>> pairToProjectWorkdays) {
 		long max = 0;
 		EmployeePair bestPair = null;
 		
-		for (var pair : pairToWorkdays.keySet()) {
+		for (var pair : pairToProjectWorkdays.keySet()) {
 			long pairSum = 0;
-		 
-			for (var days : pairToWorkdays.get(pair).values()) {
-				pairSum += days;
-			}
+			
+			pairSum = pairToProjectWorkdays.get(pair).values().stream().reduce((long) 0, Long::sum);
 			
 			if (max < pairSum) {
 				bestPair = pair;
@@ -94,9 +87,9 @@ public class ProjectDataProcessing {
 		}
 		
 		EmployeePairSummary summary = new EmployeePairSummary(bestPair);
-		summary.setProjectsToWorkdays(pairToWorkdays.get(bestPair));
+		summary.setProjectsToWorkdays(pairToProjectWorkdays.get(bestPair));
 		summary.setTotalWorkdays(max);
-		return summary;
+		return Optional.ofNullable(summary);
 	}
 	
 }

@@ -57,4 +57,11 @@ public class EmployeePair {
 		return Objects.hash(this.firstEmployeeID, this.secondEmployeeID);
 	}
 
+	@Override
+	public String toString() {
+		return "Pair [" + firstEmployeeID + ", " + secondEmployeeID + "]";
+	}
+	
+	
+
 }

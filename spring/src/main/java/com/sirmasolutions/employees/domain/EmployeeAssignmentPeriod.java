@@ -59,19 +59,13 @@ public class EmployeeAssignmentPeriod {
 		if (aPeriod.getDateTo().isBefore(otherPeriod.getDateFrom()) || aPeriod.getDateFrom().isAfter(otherPeriod.getDateTo())) {
 			return 0;
 		}
-		
-		System.out.println("Intersection of " + aPeriod + " and " + otherPeriod);
-		
+
 		return computeDayIntersection(aPeriod, otherPeriod);
 	}
 	
 	private static long computeDayIntersection(EmployeeAssignmentPeriod aPeriod, EmployeeAssignmentPeriod otherPeriod) {
 		LocalDate intersectionStart = aPeriod.getDateFrom().isAfter(otherPeriod.getDateFrom()) ? aPeriod.getDateFrom() : otherPeriod.getDateFrom();
 		LocalDate intersectionEnd = aPeriod.getDateTo().isBefore(otherPeriod.getDateTo()) ? aPeriod.getDateTo() : otherPeriod.getDateTo();
-		
-		System.out.println("Intersection start: " + intersectionStart);
-		System.out.println("Intersection end: " + intersectionEnd);
-		System.out.println("Duration: " + Duration.between(intersectionStart.atStartOfDay(), intersectionEnd.atStartOfDay()).toDays());
 		
 		return Duration.between(intersectionStart.atStartOfDay(), intersectionEnd.atStartOfDay()).toDays();
 	}

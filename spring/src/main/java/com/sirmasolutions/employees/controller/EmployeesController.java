@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,14 +47,20 @@ public class EmployeesController {
 		
 		Map<EmployeePair, Map<Integer, Long>> employeePairsToProjectWorkdays = ProjectDataProcessing.computePairwiseCommonProjectWorkdays(assignments);
 		
-		EmployeePairSummary bestPair = ProjectDataProcessing.findBestPair(employeePairsToProjectWorkdays);
+		Optional<EmployeePairSummary> optBestPair = ProjectDataProcessing.findBestPair(employeePairsToProjectWorkdays);
 		
-		System.out.println("The employees with most workdays on common projects are:");
-		System.out.printf("%d, %d, %d%n",bestPair.getPair().getFirstEmployeeID(), bestPair.getPair().getSecondEmployeeID(), bestPair.getTotalWorkdays());
-		
-		List<CommonProjectsData> list = toSerializableData(bestPair);
+		if (optBestPair.isPresent()) {
+			EmployeePairSummary bestPair = optBestPair.get();
+			
+			System.out.println("The employees with most workdays on common projects are:");
+			System.out.printf("%d, %d, %d%n",bestPair.getPair().getFirstEmployeeID(), bestPair.getPair().getSecondEmployeeID(), bestPair.getTotalWorkdays());
+			
+			List<CommonProjectsData> list = toSerializableData(bestPair);
 
-		return new EmployeePairResponse(list, bestPair.getPair().getFirstEmployeeID(), bestPair.getPair().getSecondEmployeeID(), bestPair.getTotalWorkdays());
+			return new EmployeePairResponse(list, bestPair.getPair().getFirstEmployeeID(), bestPair.getPair().getSecondEmployeeID(), bestPair.getTotalWorkdays());
+		} else {
+			return new EmployeePairResponse(Collections.emptyList(), -1, -1, -1);
+		}
 	}
 
 	@ExceptionHandler(DateTimeException.class)
