@@ -14,27 +14,35 @@ import com.sirmasolutions.employees.domain.ProjectAssignmentData;
 
 public class ProjectDataProcessing {
 	
-	public static Map<EmployeePair, Map<Integer, Long>> process(List<ProjectAssignmentData> data) {
+	public static Map<EmployeePair, Map<Integer, Long>> computePairwiseCommonProjectWorkdays(List<ProjectAssignmentData> data) {
 		
-		Map<Integer, List<EmployeeAssignmentPeriod>> projectToAssignmentsMap = new HashMap<Integer, List<EmployeeAssignmentPeriod>>();
 		Map<EmployeePair, Map<Integer, Long>> globalWorkdaysPerPair = new HashMap<EmployeePair, Map<Integer, Long>>();
 	
-		for (var projectAssignment : data) {
+		Map<Integer, List<EmployeeAssignmentPeriod>> projectToAssignmentsMap = computeProjectAssignmentPeriodsMap(data);
+		
+		for (int projectID : projectToAssignmentsMap.keySet()) {
+			var pairWorkdaysForProject = extractPairedEmployeesPeriods(projectToAssignmentsMap.get(projectID));
+			
+			for (var pair : pairWorkdaysForProject.keySet()) {
+				var projectsToWorkdays = globalWorkdaysPerPair.computeIfAbsent(pair, key -> new HashMap<Integer, Long>());
+				var currentProjectWorkdays = projectsToWorkdays.computeIfAbsent(projectID, key -> (long) 0);
+				projectsToWorkdays.put(projectID, currentProjectWorkdays + pairWorkdaysForProject.get(pair));
+			}
+			
+		}
+		
+		return globalWorkdaysPerPair;
+	}
+
+	private static Map<Integer, List<EmployeeAssignmentPeriod>> computeProjectAssignmentPeriodsMap(List<ProjectAssignmentData> projectAssignments) {
+		Map<Integer, List<EmployeeAssignmentPeriod>> projectToAssignmentsMap = new HashMap<Integer, List<EmployeeAssignmentPeriod>>();
+		
+		for (var projectAssignment : projectAssignments) {
 			var projectList = projectToAssignmentsMap.computeIfAbsent(projectAssignment.getProjectID(), key -> new LinkedList<EmployeeAssignmentPeriod>());
 			projectList.add(new EmployeeAssignmentPeriod(projectAssignment.getEmpoyeeID(), projectAssignment.getDateFrom(), projectAssignment.getDateTo()));
 		}
 		
-		for (int projectID : projectToAssignmentsMap.keySet()) {
-			var pairWorkdaysMap = extractPairedEmployeesPeriods(projectToAssignmentsMap.get(projectID));
-			
-			for (var pair : pairWorkdaysMap.keySet()) {
-				var projectsToWorkdays = globalWorkdaysPerPair.computeIfAbsent(pair, key -> new HashMap<Integer, Long>());
-				var currentProjectWorkdays = projectsToWorkdays.computeIfAbsent(projectID, key -> (long) 0);
-				projectsToWorkdays.put(projectID, currentProjectWorkdays + pairWorkdaysMap.get(pair));
-			}
-		}
-		
-		return globalWorkdaysPerPair;
+		return projectToAssignmentsMap;
 	}
 	
 	public static Map<EmployeePair, Long> extractPairedEmployeesPeriods(List<EmployeeAssignmentPeriod> assignments) {

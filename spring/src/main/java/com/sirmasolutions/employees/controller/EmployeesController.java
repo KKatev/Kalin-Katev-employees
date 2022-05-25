@@ -44,7 +44,7 @@ public class EmployeesController {
 	  
 		List<ProjectAssignmentData> assignments = AssignmentPeriodsParser.parse(file.getInputStream(), separator, dateFormat);
 		
-		Map<EmployeePair, Map<Integer, Long>> employeePairsToProjectWorkdays = ProjectDataProcessing.process(assignments);
+		Map<EmployeePair, Map<Integer, Long>> employeePairsToProjectWorkdays = ProjectDataProcessing.computePairwiseCommonProjectWorkdays(assignments);
 		
 		EmployeePairSummary bestPair = ProjectDataProcessing.findBestPair(employeePairsToProjectWorkdays);
 		
